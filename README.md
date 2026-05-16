@@ -1,20 +1,8 @@
-<<<<<<< HEAD
-# my_app
+HealthSnap – Digital Medical Records App | Flutter, Firebase, Cloudinary, OCR/AI
+Full-Stack Mobile Application Developer
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
-# HealthSnap
->>>>>>> 0f465f279dd42c11b3ef4ad8eecab2dd2a270c56
+Built a dual-module Flutter app (Patient + Doctor) enabling secure digitization, storage, and sharing of medical records to eliminate Pakistan's paper-based healthcare record problem
+Implemented OCR + AI-based data extraction from scanned lab reports and prescriptions, automatically parsing doctor name, diagnosis, medicines, test values, and report date
+Developed dynamic QR code system for session-based doctor access — doctors scan patient QR to view records temporarily, with automatic revocation after session ends to ensure privacy
+Integrated Cloudinary for medical image storage and Cloud Firestore for structured record management with role-based access control (Patient / Doctor)
+Built doctor-side appointment management, patient history viewer, and AI-generated report summaries; designed dashboard with quick-access metrics for total records and reports
