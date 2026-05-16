@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_app/services/cloudinary_service.dart';
 import 'package:my_app/services/gemini_service.dart';
+import 'package:my_app/utils/app_snackbar.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
 
 class ScanScreen extends StatelessWidget {
   ScanScreen({super.key});
@@ -47,43 +50,75 @@ class ScanScreen extends StatelessWidget {
       if (uid == null) throw Exception('User not logged in');
 
       if (scanType == 'Scan Medical History') {
-        final data = await GeminiService.extractMedicalHistory(file);
-        // Add metadata
+        late Map<String, dynamic> data;
+        try {
+          data = await GeminiService.extractMedicalHistory(file);
+        } catch (_) {
+          throw Exception('AI service is busy. Please try again.');
+        }
+        // Validate: must have at least one meaningful field
+        final hasDiagnosis = (data['diagnosis']?.toString() ?? '').isNotEmpty;
+        final hasDoctor = (data['doctorName']?.toString() ?? '').isNotEmpty;
+        final hasClinic = (data['clinicName']?.toString() ?? '').isNotEmpty;
+        if (!hasDiagnosis && !hasDoctor && !hasClinic) {
+          throw Exception('No medical record found. Please scan a valid prescription or medical document.');
+        }
+        // Upload image to Cloudinary and save URL
+        String imageUrl = '';
+        try {
+          imageUrl = await CloudinaryService.uploadImage(file);
+        } catch (e) {
+          debugPrint('==== CLOUDINARY UPLOAD ERROR (history): $e ====');
+        }
         data['userId'] = uid;
         data['createdAt'] = FieldValue.serverTimestamp();
         data['medicineCount'] = (data['medicines'] as List?)?.length ?? 0;
+        data['imageUrl'] = imageUrl;
         await FirebaseFirestore.instance.collection('medical_history').add(data);
       } else {
-        final data = await GeminiService.extractMedicalReport(file);
+        late Map<String, dynamic> data;
+        try {
+          data = await GeminiService.extractMedicalReport(file);
+        } catch (_) {
+          throw Exception('AI service is busy. Please try again.');
+        }
+        // Validate: must have testName or at least one parameter
+        final hasTestName = (data['testName']?.toString() ?? '').isNotEmpty;
+        final hasParams = (data['parameters'] as List?)?.isNotEmpty == true;
+        if (!hasTestName && !hasParams) {
+          throw Exception('No medical report found. Please scan a valid lab report or medical document.');
+        }
+        // Upload image to Cloudinary and save URL
+        String imageUrl = '';
+        try {
+          imageUrl = await CloudinaryService.uploadImage(file);
+        } catch (e) {
+          // Upload failure is non-fatal — report is still saved without image
+          debugPrint('==== CLOUDINARY UPLOAD ERROR: $e ====');
+        }
         data['userId'] = uid;
         data['createdAt'] = FieldValue.serverTimestamp();
         data['parametersCount'] = (data['parameters'] as List?)?.length ?? 0;
-        data['imagePath'] = '';
+        data['imageUrl'] = imageUrl;
         await FirebaseFirestore.instance.collection('medical_reports').add(data);
       }
 
       if (outerContext.mounted) {
         Navigator.of(outerContext, rootNavigator: true).pop(); // close loading dialog
-        ScaffoldMessenger.of(outerContext).showSnackBar(
-          SnackBar(
-            content: Text(
-              scanType == 'Scan Medical History'
-                  ? 'Medical history saved successfully!'
-                  : 'Medical report saved successfully!',
-            ),
-            backgroundColor: const Color(0xFF2ECC71),
-          ),
+        AppSnackbar.showSuccess(
+          outerContext,
+          scanType == 'Scan Medical History'
+              ? 'Medical history saved successfully!'
+              : 'Medical report saved successfully!',
         );
       }
     } catch (e) {
       if (outerContext.mounted) {
         Navigator.of(outerContext, rootNavigator: true).pop(); // close loading dialog
-        ScaffoldMessenger.of(outerContext).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
+        AppSnackbar.showError(
+          outerContext,
+          e.toString().replaceFirst('Exception: ', ''),
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -221,22 +256,7 @@ class ScanScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined,
-                color: const Color(0xFF3B5BDB), size: 20),
-            const SizedBox(width: 6),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+        title: const HealthsnapLogoTitle(),
         centerTitle: false,
       ),
       body: SingleChildScrollView(

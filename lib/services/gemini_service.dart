@@ -2,15 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:http/http.dart' as http;
 
 class GeminiService {
   static const String _geminiApiKey = 'AIzaSyCatVJ3S1QoNDL9KBZsq9y9Bh78Vu1jygY';
-  static const String _grokApiKey = 'xai-LC8lOZyZJ0JzHeb8nlZ8PFuqtPBiLnT7AxDsHYvi2ZbczO530rYzEW8A6dWPgvBCdv8L7JsYjANXNPB3'; // <-- Replace with your xAI API key
-  static const String _grokEndpoint = 'https://api.x.ai/v1/chat/completions';
 
-  static final GenerativeModel _model = GenerativeModel(
+  static final GenerativeModel _flashModel = GenerativeModel(
     model: 'gemini-2.5-flash',
+    apiKey: _geminiApiKey,
+  );
+
+  static final GenerativeModel _flashLiteModel = GenerativeModel(
+    model: 'gemini-2.5-flash-lite',
     apiKey: _geminiApiKey,
   );
 
@@ -35,11 +37,20 @@ class GeminiService {
     final mimeType = _getMimeType(imageFile.path);
 
     try {
-      return await _geminiExtract(bytes, mimeType, _historyPrompt);
+      return await _geminiExtract(
+        model: _flashModel,
+        bytes: bytes,
+        mimeType: mimeType,
+        promptText: _historyPrompt,
+      );
     } catch (e) {
       if (_isServerError(e)) {
-        // Fallback to Grok
-        return await _grokExtract(bytes, mimeType, _historyPrompt);
+        return await _geminiExtract(
+          model: _flashLiteModel,
+          bytes: bytes,
+          mimeType: mimeType,
+          promptText: _historyPrompt,
+        );
       }
       rethrow;
     }
@@ -51,11 +62,20 @@ class GeminiService {
     final mimeType = _getMimeType(imageFile.path);
 
     try {
-      return await _geminiExtract(bytes, mimeType, _reportPrompt);
+      return await _geminiExtract(
+        model: _flashModel,
+        bytes: bytes,
+        mimeType: mimeType,
+        promptText: _reportPrompt,
+      );
     } catch (e) {
       if (_isServerError(e)) {
-        // Fallback to Grok
-        return await _grokExtract(bytes, mimeType, _reportPrompt);
+        return await _geminiExtract(
+          model: _flashLiteModel,
+          bytes: bytes,
+          mimeType: mimeType,
+          promptText: _reportPrompt,
+        );
       }
       rethrow;
     }
@@ -74,64 +94,23 @@ class GeminiService {
 
   // ─── Gemini extraction ───
   static Future<Map<String, dynamic>> _geminiExtract(
-      Uint8List bytes, String mimeType, String promptText) async {
+      {
+        required GenerativeModel model,
+        required Uint8List bytes,
+        required String mimeType,
+        required String promptText,
+      }) async {
     final prompt = Content.multi([
       TextPart(promptText),
       DataPart(mimeType, bytes),
     ]);
 
     try {
-      final response = await _model.generateContent([prompt]);
+      final response = await model.generateContent([prompt]);
       final text = response.text ?? '';
       return _parseJson(text);
     } catch (e) {
       throw Exception('Gemini: $e');
-    }
-  }
-
-  // ─── Grok fallback extraction ───
-  static Future<Map<String, dynamic>> _grokExtract(
-      Uint8List bytes, String mimeType, String promptText) async {
-    final base64Image = base64Encode(bytes);
-
-    final body = jsonEncode({
-      'model': 'grok-4',
-      'messages': [
-        {
-          'role': 'user',
-          'content': [
-            {'type': 'text', 'text': promptText},
-            {
-              'type': 'image_url',
-              'image_url': {
-                'url': 'data:$mimeType;base64,$base64Image',
-              },
-            },
-          ],
-        },
-      ],
-      'temperature': 0.1,
-    });
-
-    try {
-      final response = await http.post(
-        Uri.parse(_grokEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_grokApiKey',
-        },
-        body: body,
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Grok API error: ${response.statusCode} ${response.body}');
-      }
-
-      final json = jsonDecode(response.body);
-      final text = json['choices'][0]['message']['content'] as String;
-      return _parseJson(text);
-    } catch (e) {
-      throw Exception('Failed to process image: $e');
     }
   }
 

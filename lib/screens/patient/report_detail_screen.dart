@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
+import 'package:my_app/utils/app_snackbar.dart';
 
 class ReportDetailScreen extends StatelessWidget {
   final Map<String, dynamic> report;
@@ -22,22 +25,7 @@ class ReportDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined,
-                color: const Color(0xFF3B5BDB), size: 20),
-            const SizedBox(width: 6),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+        title: const HealthsnapLogoTitle(),
         centerTitle: false,
       ),
       body: Column(
@@ -248,14 +236,20 @@ class ReportDetailScreen extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Open original report image
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No original image available'),
-                      backgroundColor: Color(0xFF6B7280),
-                    ),
-                  );
+                onPressed: () async {
+                  final imageUrl = report['imageUrl']?.toString() ?? '';
+                  if (imageUrl.isEmpty) {
+                    AppSnackbar.showInfo(
+                        context, 'No original image available');
+                    return;
+                  }
+                  final uri = Uri.parse(imageUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (!context.mounted) return;
+                    AppSnackbar.showError(context, 'Could not open image');
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3B5BDB),

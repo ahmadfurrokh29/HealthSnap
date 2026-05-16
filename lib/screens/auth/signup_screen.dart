@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/services/auth_service.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
+import 'package:my_app/utils/app_snackbar.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -58,22 +61,47 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        AppSnackbar.showSuccess(
+            context, 'Account created successfully! Please login.',
+            duration: const Duration(seconds: 2));
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const LoginScreen(),
+              transitionsBuilder: (_, animation, __, child) =>
+                  FadeTransition(opacity: animation, child: child),
+              transitionDuration: const Duration(milliseconds: 300),
+            ),
+          );
+        }
       }
+    } on FirebaseAuthException catch (e) {
+      String msg;
+      switch (e.code) {
+        case 'email-already-in-use':
+          msg = 'This email is already registered. Please login.';
+          break;
+        case 'invalid-email':
+          msg = 'Invalid email address.';
+          break;
+        case 'weak-password':
+          msg = 'Password is too weak. Use at least 6 characters.';
+          break;
+        default:
+          msg = 'Signup failed. Please try again.';
+      }
+      _showError(msg);
     } catch (e) {
-      _showError(e.toString());
+      _showError('Signup failed. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    AppSnackbar.showError(context, message);
   }
 
   @override
@@ -83,21 +111,7 @@ class _SignupScreenState extends State<SignupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined, color: const Color(0xFF3B5BDB), size: 22),
-            const SizedBox(width: 8),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
+        title: const HealthsnapLogoTitle(),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -352,7 +366,13 @@ class _SignupScreenState extends State<SignupScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const LoginScreen(),
+                          transitionsBuilder: (_, animation, __, child) =>
+                              FadeTransition(opacity: animation, child: child),
+                          transitionDuration:
+                              const Duration(milliseconds: 300),
+                        ),
                       );
                     },
                     child: const Text(
@@ -365,27 +385,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 20),
-              // Terms
-              RichText(
-                textAlign: TextAlign.center,
-                text: const TextSpan(
-                  style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-                  children: [
-                    TextSpan(text: "By creating an account, you agree to HealthSnap's\n"),
-                    TextSpan(
-                      text: 'Terms of Service',
-                      style: TextStyle(color: Color(0xFF3B5BDB)),
-                    ),
-                    TextSpan(text: ' and '),
-                    TextSpan(
-                      text: 'Privacy Policy',
-                      style: TextStyle(color: Color(0xFF3B5BDB)),
-                    ),
-                    TextSpan(text: '.'),
-                  ],
-                ),
               ),
               const SizedBox(height: 30),
             ],

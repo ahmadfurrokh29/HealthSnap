@@ -3,14 +3,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/firebase_options.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
+import 'package:my_app/screens/doctor/doctor_main_shell.dart';
 import 'package:my_app/screens/patient/patient_main_shell.dart';
+import 'package:my_app/screens/splash_screen.dart';
 import 'package:my_app/services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3B5BDB)),
         useMaterial3: true,
       ),
-      home: const AuthGate(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -57,8 +57,10 @@ class AuthGate extends StatelessWidget {
               if (roleSnapshot.data == 'Patient') {
                 return const PatientMainShell();
               }
-              // TODO: Doctor home
-              return const PatientMainShell();
+              if (roleSnapshot.data == 'Doctor') {
+                return const DoctorMainShell();
+              }
+              return const LoginScreen();
             },
           );
         }

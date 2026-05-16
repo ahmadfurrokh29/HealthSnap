@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/screens/patient/history_detail_screen.dart';
+import 'package:my_app/services/cloudinary_service.dart';
 
 class HistoryScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -27,22 +29,7 @@ class HistoryScreen extends StatelessWidget {
             }
           },
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined,
-                color: const Color(0xFF3B5BDB), size: 20),
-            const SizedBox(width: 6),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+        title: const HealthsnapLogoTitle(),
         centerTitle: false,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -131,7 +118,7 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, String docId) {
+  void _confirmDelete(BuildContext context, String docId, String imageUrl) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -146,6 +133,9 @@ class HistoryScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              if (imageUrl.isNotEmpty) {
+                try { await CloudinaryService.deleteImage(imageUrl); } catch (_) {}
+              }
               await FirebaseFirestore.instance.collection('medical_history').doc(docId).delete();
             },
             child: const Text('Delete', style: TextStyle(color: Color(0xFFE53E3E), fontWeight: FontWeight.w600)),
@@ -186,7 +176,7 @@ class HistoryScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () => _confirmDelete(context, docId),
+                  onTap: () => _confirmDelete(context, docId, record['imageUrl']?.toString() ?? ''),
                   child: const Icon(Icons.delete_outline, color: Color(0xFFE53E3E), size: 20),
                 ),
               ],

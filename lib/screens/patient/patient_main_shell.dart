@@ -3,8 +3,6 @@ import 'package:my_app/screens/patient/patient_home_screen.dart';
 import 'package:my_app/screens/patient/history_screen.dart';
 import 'package:my_app/screens/patient/reports_screen.dart';
 import 'package:my_app/screens/patient/profile_screen.dart';
-import 'package:my_app/screens/patient/scan_screen.dart';
-import 'package:my_app/screens/patient/qr_screen.dart';
 
 class PatientMainShell extends StatefulWidget {
   const PatientMainShell({super.key});
@@ -32,42 +30,48 @@ class _PatientMainShellState extends State<PatientMainShell> {
     PatientHomeScreen(onSwitchTab: _switchTab, onQrTap: _goToProfileWithQr),
     HistoryScreen(onBack: () => _switchTab(0)),
     ReportsScreen(onBack: () => _switchTab(0)),
-    ProfileScreen(autoShowQr: _autoShowQr, onQrShown: () { _autoShowQr = false; }),
+    ProfileScreen(autoShowQr: _autoShowQr, onQrShown: () { _autoShowQr = false; }, onBack: () => _switchTab(0)),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Navigator(
-      key: GlobalKey<NavigatorState>(),
-      onGenerateRoute: (settings) {
-        // Handle named routes from home screen
-        switch (settings.name) {
-          case '/scan':
-            return MaterialPageRoute(builder: (_) => ScanScreen());
-          case '/qr':
-            return MaterialPageRoute(builder: (_) => const QrScreen());
-          case '/history':
-            return MaterialPageRoute(builder: (_) => const HistoryScreen());
-          case '/reports':
-            return MaterialPageRoute(builder: (_) => const ReportsScreen());
-          default:
-            return MaterialPageRoute(
-              builder: (_) => _buildShell(),
-            );
-        }
+  Widget _tabTransition(Widget child, Animation<double> animation) {
+    return AnimatedBuilder(
+      animation: animation,
+      child: FadeTransition(opacity: animation, child: child),
+      builder: (context, child) {
+        final isForward = animation.status == AnimationStatus.forward ||
+            animation.status == AnimationStatus.completed;
+        final offset = isForward
+            ? Offset(1.0 - animation.value, 0.0)
+            : Offset(-0.08 * (1.0 - animation.value), 0.0);
+        return FractionalTranslation(translation: offset, child: child!);
       },
     );
   }
 
-  Widget _buildShell() {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        transitionBuilder: _tabTransition,
+        layoutBuilder: (currentChild, previousChildren) => Stack(
+          fit: StackFit.expand,
+          children: [
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        ),
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: _pages[_currentIndex],
+        ),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),

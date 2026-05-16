@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
+import 'package:my_app/utils/app_snackbar.dart';
 
 class HistoryDetailScreen extends StatelessWidget {
   final Map<String, dynamic> record;
@@ -31,26 +34,14 @@ class HistoryDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined,
-                color: const Color(0xFF3B5BDB), size: 20),
-            const SizedBox(width: 6),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+        title: const HealthsnapLogoTitle(),
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -371,6 +362,57 @@ class HistoryDetailScreen extends StatelessWidget {
             const SizedBox(height: 30),
           ],
         ),
+      ),
+    ),
+
+          // View Original History Image button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final imageUrl = record['imageUrl']?.toString() ?? '';
+                  if (imageUrl.isEmpty) {
+                    AppSnackbar.showInfo(
+                        context, 'No prescription image available');
+                    return;
+                  }
+                  final uri = Uri.parse(imageUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (!context.mounted) return;
+                    AppSnackbar.showError(context, 'Could not open image');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B5BDB),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.description_outlined, size: 20),
+                    SizedBox(width: 10),
+                    Text(
+                      'View Medical Prescription',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

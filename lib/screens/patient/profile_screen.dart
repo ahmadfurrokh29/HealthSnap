@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
 import 'package:my_app/services/auth_service.dart';
 import 'package:my_app/screens/auth/login_screen.dart';
 import 'package:my_app/screens/patient/edit_profile_screen.dart';
@@ -9,8 +10,9 @@ import 'package:my_app/screens/patient/edit_profile_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final bool autoShowQr;
   final VoidCallback? onQrShown;
+  final VoidCallback? onBack;
 
-  const ProfileScreen({super.key, this.autoShowQr = false, this.onQrShown});
+  const ProfileScreen({super.key, this.autoShowQr = false, this.onQrShown, this.onBack});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -159,24 +161,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
-          onPressed: () {},
+          onPressed: () => widget.onBack?.call(),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined,
-                color: const Color(0xFF3B5BDB), size: 20),
-            const SizedBox(width: 6),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+        title: const HealthsnapLogoTitle(),
         centerTitle: false,
         actions: [
           IconButton(

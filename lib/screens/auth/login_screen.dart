@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/services/auth_service.dart';
+import 'package:my_app/screens/doctor/doctor_main_shell.dart';
 import 'package:my_app/screens/auth/signup_screen.dart';
 import 'package:my_app/screens/patient/patient_main_shell.dart';
+import 'package:my_app/utils/app_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,28 +54,47 @@ class _LoginScreenState extends State<LoginScreen> {
               MaterialPageRoute(builder: (_) => const PatientMainShell()),
               (route) => false,
             );
-          } else {
-            // TODO: Navigate to Doctor home
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Doctor home coming soon'),
-                backgroundColor: Colors.green,
-              ),
+          } else if (role == 'Doctor') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const DoctorMainShell()),
+              (route) => false,
             );
+          } else {
+            _showError('Role not found for this account');
           }
         }
       }
+    } on FirebaseAuthException catch (e) {
+      String msg;
+      switch (e.code) {
+        case 'wrong-password':
+        case 'invalid-credential':
+        case 'user-not-found':
+          msg = 'Incorrect email or password.';
+          break;
+        case 'invalid-email':
+          msg = 'Invalid email address.';
+          break;
+        case 'too-many-requests':
+          msg = 'Too many attempts. Please try again later.';
+          break;
+        case 'user-disabled':
+          msg = 'This account has been disabled.';
+          break;
+        default:
+          msg = 'Login failed. Please check your credentials.';
+      }
+      _showError(msg);
     } catch (e) {
-      _showError(e.toString());
+      _showError('Login failed. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    AppSnackbar.showError(context, message);
   }
 
   @override
@@ -85,18 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             children: [
               const SizedBox(height: 80),
-              // Medical cross icon in blue circle
-              Container(
-                width: 70,
-                height: 70,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF3B5BDB),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.add_circle_outline,
-                  size: 36,
-                  color: Colors.white,
+              ClipOval(
+                child: Image.asset(
+                  'Assets/logo3.jpeg',
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 20),
@@ -111,10 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 6),
               const Text(
                 'Login to your account',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF8E8E93),
-                ),
+                style: TextStyle(fontSize: 15, color: Color(0xFF8E8E93)),
               ),
               const SizedBox(height: 40),
               // Login form card
@@ -151,15 +164,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: 'name@example.com',
-                        hintStyle: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 14),
-                        prefixIcon: const Icon(Icons.mail_outline, color: Color(0xFF9CA3AF), size: 20),
+                        hintStyle: const TextStyle(
+                          color: Color(0xFFB0B0B0),
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.mail_outline,
+                          color: Color(0xFF9CA3AF),
+                          size: 20,
+                        ),
                         filled: true,
                         fillColor: const Color(0xFFF3F4F6),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -197,15 +220,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: '••••••••',
-                        hintStyle: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 14),
-                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF9CA3AF), size: 20),
+                        hintStyle: const TextStyle(
+                          color: Color(0xFFB0B0B0),
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color(0xFF9CA3AF),
+                          size: 20,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
                             color: const Color(0xFF9CA3AF),
                             size: 20,
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                         ),
                         filled: true,
                         fillColor: const Color(0xFFF3F4F6),
@@ -213,7 +247,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -266,16 +303,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text(
                     "Don't have an account? ",
-                    style: TextStyle(
-                      color: Color(0xFF6B7280),
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
                   ),
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const SignupScreen()),
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const SignupScreen(),
+                          transitionsBuilder: (_, animation, __, child) =>
+                              FadeTransition(opacity: animation, child: child),
+                          transitionDuration:
+                              const Duration(milliseconds: 300),
+                        ),
                       );
                     },
                     child: const Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_app/utils/app_snackbar.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -130,22 +131,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }, SetOptions(merge: true));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile saved successfully'),
-            backgroundColor: Color(0xFF2ECC71),
-          ),
-        );
+        AppSnackbar.showSuccess(context, 'Profile saved successfully');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackbar.showError(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

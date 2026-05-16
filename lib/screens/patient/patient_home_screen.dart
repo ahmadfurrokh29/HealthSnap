@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:my_app/screens/patient/scan_screen.dart';
+import 'package:my_app/widgets/healthsnap_logo_title.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   final void Function(int)? onSwitchTab;
@@ -67,26 +69,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
-          onPressed: () {},
-        ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shield_outlined,
-                color: const Color(0xFF3B5BDB), size: 20),
-            const SizedBox(width: 6),
-            const Text(
-              'HealthSnap',
-              style: TextStyle(
-                color: Color(0xFF3B5BDB),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+        automaticallyImplyLeading: false,
+        title: const HealthsnapLogoTitle(),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
@@ -137,7 +121,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             // Scan Reports & History big blue card
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed(context, '/scan');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ScanScreen()),
+                );
               },
               child: Container(
                 width: double.infinity,
