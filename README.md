@@ -153,17 +153,6 @@ To use your own backend, create a Firebase project, run `flutterfire configure` 
 - iOS and web support, multi-language support
 - Revenue model: doctor premium subscription, clinic advertisements, laboratory integrations
 
-## 👨‍💻 Team
-
-| Name | Role |
-|---|---|
-| Ahmad Furrokh | Team Lead & Developer |
-| Maheen Khalid | Marketing Manager |
-| Shahmir Khan | Social Media & Finance |
-| Ambar Shahid | Designer |
-| Jawad Asad | Operations Manager |
-
-*Technology and Entrepreneurship Project — submitted to Sir Abdul Rafay, May 2026.*
 
 ---
 
