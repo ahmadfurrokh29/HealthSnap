@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
-  static const String _geminiApiKey = 'AIzaSyCatVJ3S1QoNDL9KBZsq9y9Bh78Vu1jygY';
+  static const String _geminiApiKey = 'YOUR_GEMINI_API_KEY';
 
   static final GenerativeModel _flashModel = GenerativeModel(
     model: 'gemini-2.5-flash',

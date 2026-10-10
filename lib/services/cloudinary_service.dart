@@ -5,11 +5,11 @@ import 'package:http/http.dart' as http;
 
 class CloudinaryService {
   // Unsigned upload — only Cloud Name + Upload Preset needed (no secret exposed)
-  static const String _cloudName = 'dbztfelok';
+  static const String _cloudName = 'YOUR_CLOUD_NAME';
   static const String _uploadPreset = 'HealthSnap';
   // For signed delete — fill from Cloudinary Dashboard → Settings → Access Keys
-  static const String _apiKey = '578355662348789';
-  static const String _apiSecret = '0yLWZAPl7zzRSLURrcWA5g2AnSE';
+  static const String _apiKey = 'YOUR_CLOUDINARY_API_KEY';
+  static const String _apiSecret = 'YOUR_CLOUDINARY_API_SECRET';
 
   static const String _uploadUrl =
       'https://api.cloudinary.com/v1_1/$_cloudName/image/upload';
