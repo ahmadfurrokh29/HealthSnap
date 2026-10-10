@@ -156,6 +156,3 @@ To use your own backend, create a Firebase project, run `flutterfire configure` 
 
 ---
 
-<div align="center">
-Made with ❤️ using Flutter
-</div>
